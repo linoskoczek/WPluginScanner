@@ -1,8 +1,10 @@
+"Functions responsible for output of data like print and file write."
+
 import Config
 import threading
 
 fileLock = threading.Lock()
-
+log_level = Config.LOG_LEVEL
 
 def p(name, message, level=2):
     if(Config.LOG_LEVEL >= level):

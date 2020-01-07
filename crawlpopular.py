@@ -1,6 +1,5 @@
 """
-This script will create a list of most popular plugin
-and save it in a POPULAR_OUT_FILE
+This script will create a list of most popular plugin and save it in POPULAR_OUT_FILE file.
 """
 
 # IMPORTS
