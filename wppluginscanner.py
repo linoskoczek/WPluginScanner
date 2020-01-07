@@ -3,45 +3,50 @@
 """
 
 # IMPORTS
-import os, sys, getopt, requests, time, datetime
+from queue import Queue
+import os
+import sys
+import getopt
+import requests
+import time
+import datetime
+import threading
 import Config
 import Printer
+import Storage
+from Requester import Requester
+
 
 popular_out_file = Config.POPULAR_OUT_FILE
-output_file = Config.FOUND_FILE
-wordpress_url = None # taken from argv
-plugins_queue = None
-
-# RESULTS
-found_plugins = set()
+wordpress_url = None  # taken from argv
+NAME = "main"
 
 # PROGRAM
 
+
 def popular_scan():
-    NAME = "[POPULAR_SCAN] "
+    NAME = "POPULAR_SCAN"
     if popular_out_file is None or not os.path.isfile(popular_out_file):
-        Printer.p(NAME + popular_out_file + ' file not found! popular_scan will not be started!', 1)
+        Printer.p(NAME, popular_out_file +
+                  ' file not found! popular_scan will not be started!', 1)
         return
-    Printer.p(NAME + "starting...", 1)
-    plugins_list = load_file_to_list(popular_out_file)
-
-    for plugin in plugins_list:
-        url = wordpress_url + Config.PLUGIN_DIRECTORY + plugin + '/'
-        handle_result(requests.get(url), plugin)
-    Printer.p(NAME + "finished. Output written to " + Config.FOUND_FILE, 0)
-    
-
-def handle_result(request, plugin_name):
-    if request.status_code != Config.STATUS_CODES_NOT_FOUND:
-        found_plugins.add(plugin_name)
-        Printer.p(str(request.status_code) + '\t' + plugin_name, 1)
-        Printer.f_single_append(output_file, plugin_name)
-    else:
-        Printer.p(str(request.status_code) + '\t' + plugin_name, 2)
+    Printer.p(NAME, "starting...", 1)
+    Printer.p(NAME, 'creating blocking queue')
+    load_file_to_queue(popular_out_file)
+    run_requester_threads(Config.NUMBER_OF_REQUESTER_THREADS)
 
 
-def load_file_to_list(file_name):
-    return [line.rstrip('\n') for line in open(file_name, 'r')]
+def run_requester_threads(thread_number):
+    for i in range(thread_number):
+        thread = Requester(i, wordpress_url)
+        thread.start()
+    Printer.p(NAME, 'Requester threads started')
+
+
+def load_file_to_queue(file_name):
+    Storage.plugins_queue = Queue()
+    for line in open(file_name, 'r'):
+        Storage.plugins_queue.put(line.rstrip('\n'))
 
 
 def print_help_and_exit():
@@ -72,8 +77,8 @@ def read_arguments(argv):
             popular_out_file = arg
     if(wordpress_url is None):
         print_help_and_exit()
-    Printer.p('WordPress url: ' + wordpress_url)
-    Printer.p('Popular file: ' + popular_out_file)
+    Printer.p(NAME, 'WordPress url: ' + wordpress_url)
+    Printer.p(NAME, 'Popular file: ' + popular_out_file)
 
 
 def main(argv):

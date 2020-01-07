@@ -11,14 +11,13 @@ import Config, Printer
 # PROGRAM
 plugins = []
 
-
 def process_result(result):
     plugins.append(result)
 
 
 def write_result_to_file():
-    global plugins
-    Printer.p("\nWriting " + str(len(plugins)) + " of plugins to " + Config.POPULAR_OUT_FILE)
+    global plugins, NAME
+    Printer.p(NAME, "\nWriting " + str(len(plugins)) + " of plugins to " + Config.POPULAR_OUT_FILE)
     Printer.f_list_overwrite(Config.POPULAR_OUT_FILE, plugins)
 
 
@@ -27,9 +26,9 @@ def output_status(current, out_of):
     stdout.write("\r%s" % out)
     stdout.flush()
 
-NAME = "[POPULAR_CRAWL] "
+NAME = "POPULAR_CRAWL"
 
-Printer.p(NAME + "starting...", 1)
+Printer.p(NAME, "starting...", 1)
 try:
     for page in range(1, Config.POPULAR_MAX_PAGE_NUMBER + 1):
         output_status(page, Config.POPULAR_MAX_PAGE_NUMBER);
@@ -40,9 +39,9 @@ try:
                 line = line[len(Config.PLUGIN_URL_START):]
                 process_result(line.split('/')[0])
 except Exception as e:
-    Printer.p(NAME + "Error occured during scanning! Anyway, trying write output...", 0)
+    Printer.p(NAME, "Error occured during scanning! Anyway, trying write output...", 0)
     Printer.p(e, 0)
 finally:
     print ("\n")
     write_result_to_file()
-    Printer.p(NAME + "finished. Output saved to " + Config.POPULAR_OUT_FILE, 0)
+    Printer.p(NAME, "finished. Output saved to " + Config.POPULAR_OUT_FILE, 0)

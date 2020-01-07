@@ -1,16 +1,37 @@
-import threading
+import threading, requests
+import Printer, Storage, Config
+from queue import Queue
 
 class Requester (threading.Thread):
-    def __init__(self, threadID, name, counter):
+    def __init__(self, thread_id, wordpress_url):
         threading.Thread.__init__(self)
-        self.name = name
+        self.NAME = "T" + str(thread_id)
+        self.wordpress_url = wordpress_url
+
+    def check(self):
+        if(Storage.plugins_queue is None):
+            Printer.p(self.NAME, "Thread shuts down because plugins_queue is not defined.")
+            return False
+        return True
 
     def run(self):
-        print "Starting " + self.name
-        # Get lock to synchronize threads
-        threadLock.acquire()
-        print_time(self.name, self.counter, 3)
-        # Free lock to release next thread
-        threadLock.release()
+        Printer.p(self.NAME, "Checking")
+        if self.check():
+            Printer.p(self.NAME, "Starting")
+            # try:
+            while not Storage.plugins_queue.empty():
+                plugin = Storage.plugins_queue.get()
+                url = self.wordpress_url + Config.PLUGIN_DIRECTORY + plugin + '/'
+                Printer.p(self.NAME, "Request to " + url)
+                self.handle_result(requests.get(url), plugin)
+            # except Queue.Empty as e:
+            #    Printer.p(NAME, "finished. Output written to " + Config.FOUND_FILE, 0)
 
-threadLock = threading.Lock()
+    def handle_result(self, request, plugin_name):
+        if request.status_code != Config.STATUS_CODES_NOT_FOUND:
+            Storage.found_plugins.append(plugin_name)
+            Printer.p(self.NAME, str(request.status_code) + '\t' + plugin_name, 1)
+            Printer.f_single_append_synchronized(
+                Config.FOUND_FILE, plugin_name)
+        else:
+            Printer.p(self.NAME, str(request.status_code) + '\t' + plugin_name, 2)
