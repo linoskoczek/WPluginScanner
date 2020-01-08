@@ -15,5 +15,5 @@ FOUND_OUTPUT_FILE = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '.tx
 PLUGINS_DIRECTORY = '/wp-content/plugins/'
 STATUS_CODES_NOT_FOUND = (404,) # tuple format
 LOG_LEVEL = 1 # 2 - ALL; 1 - ONLY FOUND; 0 - ONLY FINAL RESULT
-NUMBER_OF_REQUESTER_THREADS = 10
+NUMBER_OF_REQUESTER_THREADS = 7
 SLEEP_BETWEEN_REQ_IN_MILIS = 0

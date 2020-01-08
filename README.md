@@ -15,7 +15,7 @@ cd WPluginScanner
 
 ```
 python3 crawlpopular.py
-python3 wppluginscanner.py -u http://examplewpsite.com
+python3 wppluginscanner.py http://examplewpsite.com
 ```
 
 ## Other tools
