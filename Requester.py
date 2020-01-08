@@ -2,7 +2,7 @@
 Class inheriting Thread responsible for performing and handling requests. 
 """
 
-import threading, requests
+import threading, requests, time
 import Printer, Storage, Config
 from queue import Queue
 
@@ -29,7 +29,7 @@ class Requester (threading.Thread):
                 url = self.wordpress_url + self.plugins_directory + plugin + '/'
                 Printer.p(self.NAME, "Request to " + url)
                 self.handle_result(requests.get(url), plugin)
-                sleep(sleep_between_req_in_milis / 1000.)
+                time.sleep(self.sleep_between_req_in_milis / 1000.)
 
     def handle_result(self, request, plugin_name):
         if request.status_code not in Config.STATUS_CODES_NOT_FOUND:
