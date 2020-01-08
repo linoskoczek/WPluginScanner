@@ -7,7 +7,7 @@ fileLock = threading.Lock()
 log_level = Config.LOG_LEVEL
 
 def p(name, message, level=2):
-    if(Config.LOG_LEVEL >= level):
+    if(log_level >= level):
         print("[" + name + "]", message)
 
 

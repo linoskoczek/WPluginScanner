@@ -11,6 +11,7 @@ import requests
 import time
 import datetime
 import threading
+import argparse
 import Config
 import Printer
 import Storage
@@ -22,6 +23,7 @@ wordpress_url = None  # taken from argv
 found_output_file = Config.FOUND_OUTPUT_FILE
 number_of_requester_threads = Config.NUMBER_OF_REQUESTER_THREADS
 plugins_directory = Config.PLUGINS_DIRECTORY
+sleep_between_req_in_milis = Config.SLEEP_BETWEEN_REQ_IN_MILIS
 NAME = "MAIN"
 threads = []
 
@@ -37,20 +39,25 @@ def popular_scan():
     Printer.p(NAME, "starting...", 1)
     Printer.p(NAME, 'creating blocking queue')
     load_file_to_queue(popular_out_file)
-    run_requester_threads(Config.NUMBER_OF_REQUESTER_THREADS)
+    run_requester_threads(number_of_requester_threads)
     wait_for_threads()
-    Printer.p(NAME, "finished. Results saved in " + Config.FOUND_OUTPUT_FILE, 0)
+    Printer.p(NAME, "finished. Results saved in " +
+              Config.FOUND_OUTPUT_FILE, 0)
+
 
 def run_requester_threads(thread_number):
     for i in range(thread_number):
-        thread = Requester(i, wordpress_url, plugins_directory)
+        thread = Requester(i, wordpress_url, plugins_directory,
+                           sleep_between_req_in_milis)
         thread.start()
         threads.append(thread)
     Printer.p(NAME, 'Requester threads started')
 
+
 def wait_for_threads():
     for t in threads:
         t.join()
+
 
 def load_file_to_queue(file_name):
     Storage.plugins_queue = Queue()
@@ -58,15 +65,25 @@ def load_file_to_queue(file_name):
         Storage.plugins_queue.put(line.rstrip('\n'))
 
 
-def print_help_and_exit():
-    template = "\t-{0:1s}, --{1:15s} {2}"
-    print('Usage example: python3 wppluginscanner.py -u <site_url>')
-    print(template.format('u', 'url', 'URL to WordPress site, example: https://mywordpress.com'))  
-    print(template.format('p', 'popular', 'location of a file with plugins to check with POPULAR_SCAN; default: ' + Config.POPULAR_OUT_FILE))  
-    print(template.format('t', 'threads', 'number of threads to use for scanning; default: ' + str(Config.NUMBER_OF_REQUESTER_THREADS)))  
-    print(template.format('d', 'plugins-dir', 'wp-plugins directory location, default: ' + Config.PLUGINS_DIRECTORY))  
-    print(template.format('l', 'log-level', 'logging level; ALL = 2, DEFAULT = 1, RESULTS_ONLY = 0'))  
-    sys.exit()
+def getOptions(args=sys.argv[1:]):
+    parser = argparse.ArgumentParser(description="Parses command.")
+    threadsleep = parser.add_mutually_exclusive_group()
+    parser.add_argument('wordpress_url', type=str,
+                        help='URL to WordPress site, example: https://mywordpress.com')
+    threadsleep.add_argument("-t", "--threads", type=int, default=Config.NUMBER_OF_REQUESTER_THREADS,
+                             help='number of threads to use for scanning; sleep is set to 0; default: ' + str(Config.NUMBER_OF_REQUESTER_THREADS))
+    threadsleep.add_argument("-s", "--sleep", type=int, default=Config.SLEEP_BETWEEN_REQ_IN_MILIS,
+                             help='time in miliseconds between requests; threads are set to 1; default: 0')
+    parser.add_argument("-o", "--output", type=str, default=Config.FOUND_OUTPUT_FILE,
+                        help='output file for found plugins, default: ' + Config.FOUND_OUTPUT_FILE)
+    parser.add_argument("-l", "--log-level", dest='loglevel', type=int, default=Config.LOG_LEVEL,
+                        help='logging level; ALL = 2, DEFAULT = 1, RESULTS_ONLY = 0')
+    parser.add_argument("-p", "--popular", type=str, default=Config.POPULAR_OUT_FILE,
+                        help='location of a file with plugins to check with POPULAR_SCAN; default: ' + Config.POPULAR_OUT_FILE)
+    parser.add_argument("-d", "--plugins-dir", dest='pluginsdir', type=str, default=Config.PLUGINS_DIRECTORY,
+                        help='wp-plugins directory location, default: ' + Config.PLUGINS_DIRECTORY)
+    options = parser.parse_args(args)
+    return options
 
 
 def set_wordpress_url(url):
@@ -79,28 +96,27 @@ def set_wordpress_url(url):
 
 
 def read_arguments(argv):
-    global wordpress_url, popular_out_file
-    try:
-        opts, args = getopt.getopt(argv, "u:p:", ["url=", "popular="])
-    except getopt.GetoptError:
-        print_help_and_exit()
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            print_help_and_exit()
-        elif opt in ("-u", "--url"):
-            set_wordpress_url(arg)
-        elif opt in ("-p", "--popular"):
-            popular_out_file = arg
-        elif opt in ("-t", "--threads"):
-            number_of_requester_threads = arg
-        elif opt in ("-d", "--plugins-dir"):
-            plugins_directory = arg
-        elif opt in ("-l", "--log-level"):
-            Printer.log_level = arg    
+    global wordpress_url, popular_out_file, number_of_requester_threads, plugins_directory, found_output_file, sleep_between_req_in_milis
+
+    options = getOptions(argv)
+    set_wordpress_url(options.wordpress_url)
+    popular_out_file = options.popular
+    number_of_requester_threads = options.threads
+    sleep_between_req_in_milis = options.sleep
+    if sleep_between_req_in_milis != 0:
+        number_of_requester_threads = 1
+    plugins_directory = options.pluginsdir
+    found_output_file = options.output
+    Printer.log_level = options.loglevel
+
+    print_settings()
 
 
-    if(wordpress_url is None):
-        print_help_and_exit()
+def print_settings():
+    Printer.p(NAME, 'Threads: ' + str(number_of_requester_threads))
+    Printer.p(NAME, 'Log level: ' + str(Printer.log_level))
+    Printer.p(NAME, 'Sleep: ' + str(sleep_between_req_in_milis))
+    Printer.p(NAME, 'Plugins dir: ' + plugins_directory)
     Printer.p(NAME, 'WordPress url: ' + wordpress_url)
     Printer.p(NAME, 'Popular file: ' + popular_out_file)
 
