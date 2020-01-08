@@ -14,6 +14,9 @@ cd WPluginScanner
 ## Usage
 
 ```
+## Usage
+
+```
 python3 crawlpopular.py
 python3 wppluginscanner.py -u http://examplewpsite.com
 ```
