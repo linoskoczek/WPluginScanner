@@ -23,6 +23,7 @@ found_output_file = Config.FOUND_OUTPUT_FILE
 number_of_requester_threads = Config.NUMBER_OF_REQUESTER_THREADS
 plugins_directory = Config.PLUGINS_DIRECTORY
 NAME = "MAIN"
+threads = []
 
 # PROGRAM
 
@@ -37,14 +38,19 @@ def popular_scan():
     Printer.p(NAME, 'creating blocking queue')
     load_file_to_queue(popular_out_file)
     run_requester_threads(Config.NUMBER_OF_REQUESTER_THREADS)
-
+    wait_for_threads()
+    Printer.p(NAME, "finished. Results saved in " + Config.FOUND_OUTPUT_FILE, 0)
 
 def run_requester_threads(thread_number):
     for i in range(thread_number):
         thread = Requester(i, wordpress_url, plugins_directory)
         thread.start()
+        threads.append(thread)
     Printer.p(NAME, 'Requester threads started')
 
+def wait_for_threads():
+    for t in threads:
+        t.join()
 
 def load_file_to_queue(file_name):
     Storage.plugins_queue = Queue()
@@ -79,7 +85,9 @@ def read_arguments(argv):
     except getopt.GetoptError:
         print_help_and_exit()
     for opt, arg in opts:
-        if opt in ("-u", "--url"):
+        if opt in ("-h", "--help"):
+            print_help_and_exit()
+        elif opt in ("-u", "--url"):
             set_wordpress_url(arg)
         elif opt in ("-p", "--popular"):
             popular_out_file = arg
@@ -88,7 +96,7 @@ def read_arguments(argv):
         elif opt in ("-d", "--plugins-dir"):
             plugins_directory = arg
         elif opt in ("-l", "--log-level"):
-            Printer.log_level = arg
+            Printer.log_level = arg    
 
 
     if(wordpress_url is None):

@@ -16,7 +16,7 @@ def process_result(result):
 
 def write_result_to_file():
     global plugins, NAME
-    Printer.p(NAME, "\nWriting " + str(len(plugins)) + " of plugins to " + Config.POPULAR_OUT_FILE)
+    Printer.p(NAME, "Writing " + str(len(plugins)) + " plugins to " + Config.POPULAR_OUT_FILE)
     Printer.f_list_overwrite(Config.POPULAR_OUT_FILE, plugins)
 
 

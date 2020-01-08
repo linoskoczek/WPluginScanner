@@ -130,3 +130,6 @@ dmypy.json
 
 # VSCode
 settings.json
+
+# results
+*.txt
