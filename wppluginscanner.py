@@ -22,6 +22,7 @@ wordpress_url = None  # taken from argv
 found_output_file = Config.FOUND_OUTPUT_FILE
 number_of_requester_threads = Config.NUMBER_OF_REQUESTER_THREADS
 plugins_directory = Config.PLUGINS_DIRECTORY
+sleep_between_req_in_milis = Config.SLEEP_BETWEEN_REQ_IN_MILIS
 NAME = "MAIN"
 threads = []
 
@@ -43,7 +44,7 @@ def popular_scan():
 
 def run_requester_threads(thread_number):
     for i in range(thread_number):
-        thread = Requester(i, wordpress_url, plugins_directory)
+        thread = Requester(i, wordpress_url, plugins_directory, sleep_between_req_in_milis)
         thread.start()
         threads.append(thread)
     Printer.p(NAME, 'Requester threads started')
@@ -59,13 +60,14 @@ def load_file_to_queue(file_name):
 
 
 def print_help_and_exit():
-    template = "\t-{0:1s}, --{1:15s} {2}"
+    template = "\t-{0:1s}, --{1:20s} {2}"
     print('Usage example: python3 wppluginscanner.py -u <site_url>')
-    print(template.format('u', 'url', 'URL to WordPress site, example: https://mywordpress.com'))  
-    print(template.format('p', 'popular', 'location of a file with plugins to check with POPULAR_SCAN; default: ' + Config.POPULAR_OUT_FILE))  
-    print(template.format('t', 'threads', 'number of threads to use for scanning; default: ' + str(Config.NUMBER_OF_REQUESTER_THREADS)))  
-    print(template.format('d', 'plugins-dir', 'wp-plugins directory location, default: ' + Config.PLUGINS_DIRECTORY))  
-    print(template.format('l', 'log-level', 'logging level; ALL = 2, DEFAULT = 1, RESULTS_ONLY = 0'))  
+    print(template.format('u', 'url <url>', 'URL to WordPress site, example: https://mywordpress.com'))  
+    print(template.format('p', 'popular <file>', 'location of a file with plugins to check with POPULAR_SCAN; default: ' + Config.POPULAR_OUT_FILE))  
+    print(template.format('t', 'threads <number>', 'number of threads to use for scanning; sleep is set to 0; default: ' + str(Config.NUMBER_OF_REQUESTER_THREADS)))  
+    print(template.format('d', 'plugins-dir <dir>', 'wp-plugins directory location, default: ' + Config.PLUGINS_DIRECTORY))  
+    print(template.format('l', 'log-level <number>', 'logging level; ALL = 2, DEFAULT = 1, RESULTS_ONLY = 0'))  
+    print(template.format('s', 'sleep <miliseconds>', 'time in miliseconds between requests; threads are set to 1; default: 0'))  
     sys.exit()
 
 
@@ -96,7 +98,7 @@ def read_arguments(argv):
         elif opt in ("-d", "--plugins-dir"):
             plugins_directory = arg
         elif opt in ("-l", "--log-level"):
-            Printer.log_level = arg    
+            Printer.log_level = arg
 
 
     if(wordpress_url is None):

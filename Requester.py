@@ -7,11 +7,12 @@ import Printer, Storage, Config
 from queue import Queue
 
 class Requester (threading.Thread):
-    def __init__(self, thread_id, wordpress_url, plugins_directory):
+    def __init__(self, thread_id, wordpress_url, plugins_directory, sleep_between_req_in_milis):
         threading.Thread.__init__(self)
         self.NAME = "T" + str(thread_id)
         self.wordpress_url = wordpress_url
         self.plugins_directory = plugins_directory
+        self.sleep_between_req_in_milis = sleep_between_req_in_milis
 
     def check(self):
         if(Storage.plugins_queue is None):
@@ -28,6 +29,7 @@ class Requester (threading.Thread):
                 url = self.wordpress_url + self.plugins_directory + plugin + '/'
                 Printer.p(self.NAME, "Request to " + url)
                 self.handle_result(requests.get(url), plugin)
+                sleep(sleep_between_req_in_milis / 1000.)
 
     def handle_result(self, request, plugin_name):
         if request.status_code not in Config.STATUS_CODES_NOT_FOUND:
