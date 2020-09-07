@@ -149,9 +149,9 @@ def print_settings():
 def main(argv):
     read_arguments(argv)
     Printer.p(NAME, "Scan method: " + scan_method)
-    if scan_method == "ALL":
+    if scan_method.upper() == "ALL":
         all_scan()
-    elif scan_method == "POPULAR":
+    elif scan_method.upper() == "POPULAR":
         popular_scan()
     else:
         Printer.p(NAME, 'Invalid scan method.')
