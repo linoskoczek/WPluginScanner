@@ -2,7 +2,11 @@
 
 ## Point
 
-Crawl [WordPress Plugins](https://wordpress.org/plugins/browse/popular/) to build a list of most popular plugins. Generated list is used to make GET requests for each URL and verify if the directory (or a file?) of a plugin is in _/wp-content/plugins/_.
+Build a list of known WordPress plugins based on:
+* [WordPress Popular Plugins](https://wordpress.org/plugins/browse/popular/)
+* [WordPress SVN](https://plugins.svn.wordpress.org/)
+
+Generated lists can be used to make GET requests for each URL and verify if the directory of a plugin is in _/wp-content/plugins/_.
 
 ## Installation
 
@@ -13,12 +17,25 @@ cd WPluginScanner
 
 ## Basic usage
 
-By default the scanner will check for presence of all possible plugins. Be aware that firewalls can block you!
+### Preparation
 
+Before first run it is required to generate list of plugins. Depending on your need, you might want to run only one of below commands.
 ```
 python3 crawlpopular.py # to download list of most popular plugins
 python3 crawlall.py # to download list of all plugins
+```
+
+## Running scanner
+
+By default the scanner will check for presence of all possible plugins. Be aware that firewalls can block you!
+
+```
 python3 wppluginscanner.py http://examplewpsite.com
+```
+
+To run scanner on downloaded file with popular plugins use this command:
+```
+python3 wppluginscanner.py http://examplewpsite.com -m POPULAR
 ```
 
 ## Help
