@@ -9,6 +9,9 @@ import Config, Printer
 
 # PROGRAM
 plugins = []
+headers = {
+    'User-Agent': Config.USER_AGENT,
+}
 
 def process_result(result):
     plugins.append(result)
@@ -31,15 +34,15 @@ Printer.p(NAME, "starting...", 1)
 try:
     for page in range(1, Config.POPULAR_MAX_PAGE_NUMBER + 1):
         output_status(page, Config.POPULAR_MAX_PAGE_NUMBER);
-        response = requests.get(Config.WP_POPULAR_PLUGINS_URL + 'page/' + str(page))
+        response = requests.get(Config.WP_POPULAR_PLUGINS_URL + 'page/' + str(page), headers=headers)
         for line in response.iter_lines():
             line = line.strip().decode("utf-8")
-            if line.startswith(Config.PLUGIN_URL_START):
-                line = line[len(Config.PLUGIN_URL_START):]
+            if line.startswith(Config.POPULAR_PLUGIN_URL_START):
+                line = line[len(Config.POPULAR_PLUGIN_URL_START):]
                 process_result(line.split('/')[0])
 except Exception as e:
     Printer.p(NAME, "Error occured during scanning! Anyway, trying write output...", 0)
-    Printer.p(e, 0)
+    Printer.p(NAME, str(e), 0)
 finally:
     print ("\n")
     write_result_to_file()

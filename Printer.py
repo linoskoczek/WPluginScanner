@@ -20,7 +20,7 @@ def f_single_append_synchronized(filename, line):
 
 
 def f_list_overwrite(filename, list):
-    output = open(Config.POPULAR_OUT_FILE, "w")  # overwrites a file
+    output = open(filename, "w")  # overwrites a file
     for single in list:
         output.write("%s\n" % single)
     output.close()
