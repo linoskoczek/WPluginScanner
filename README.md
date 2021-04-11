@@ -42,12 +42,17 @@ python3 wppluginscanner.py http://examplewpsite.com -m POPULAR
 ## Help
 ```
 $ python3 wpluginscanner.py --help     
-usage: wpluginscanner.py [-h] [-t THREADS | -s SLEEP] [-m METHOD] [-o OUTPUT] [-l LOGLEVEL] [-p POPULAR_SOURCE] [-a ALL_SOURCE] [-d PLUGINSDIR] wordpress_url
+usage: wpluginscanner.py [-h] [-t THREADS | -s SLEEP] [-m METHOD] [-o OUTPUT]
+                         [-l LOGLEVEL] [-p POPULAR_SOURCE] [-a ALL_SOURCE]
+                         [-d PLUGINSDIR] [--proxy PROXY]
+                         [--http-auth HTTPAUTH]
+                         wordpress_url
 
 Parses command.
 
 positional arguments:
-  wordpress_url         URL to WordPress site, example: https://mywordpress.com
+  wordpress_url         URL to WordPress site, example:
+                        https://mywordpress.com
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -58,7 +63,7 @@ optional arguments:
   -m METHOD, --method METHOD
                         scan method: ALL or POPULAR, default: ALL
   -o OUTPUT, --output OUTPUT
-                        output file for found plugins, default: 2020-09-07 14:45:56.txt
+                        output file for found plugins, default: 2021-04-11 23:24:21.txt
   -l LOGLEVEL, --log-level LOGLEVEL
                         logging level; ALL = 2, DEFAULT = 1, RESULTS_ONLY = 0
   -p POPULAR_SOURCE, --popular_source POPULAR_SOURCE
@@ -67,6 +72,10 @@ optional arguments:
                         location of a file with plugins to check with ALL_CRAWL; default: all.txt
   -d PLUGINSDIR, --plugins-dir PLUGINSDIR
                         wp-plugins directory location, default: /wp-content/plugins/
+  --proxy PROXY         
+                        proxy to direct the requests through, IP:PORT format, default: ''
+  --http-auth HTTPAUTH  
+                        basic authentication, user:password format, default: ''
 ```
 
 
