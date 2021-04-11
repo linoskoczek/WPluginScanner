@@ -3,19 +3,24 @@ Class inheriting Thread responsible for performing and handling requests.
 """
 
 import threading, requests, time
+
+from requests.models import HTTPBasicAuth
 import Printer, Storage, Config
 from queue import Queue
 
 
 class Requester(threading.Thread):
     def __init__(
-        self, thread_id, wordpress_url, plugins_directory, sleep_between_req_in_milis
+        self, thread_id, wordpress_url, plugins_directory, sleep_between_req_in_milis, proxies, basic_auth_user, basic_auth_password
     ):
         threading.Thread.__init__(self)
         self.NAME = "T" + str(thread_id)
         self.wordpress_url = wordpress_url
         self.plugins_directory = plugins_directory
         self.sleep_between_req_in_milis = sleep_between_req_in_milis
+        self.proxies = proxies
+        self.basic_auth_user = basic_auth_user
+        self.basic_auth_password = basic_auth_password
 
     def check(self):
         if Storage.plugins_queue is None:
@@ -33,7 +38,8 @@ class Requester(threading.Thread):
                 plugin = Storage.plugins_queue.get()
                 url = self.wordpress_url + self.plugins_directory + plugin + "/"
                 Printer.p(self.NAME, "Request to " + url)
-                self.handle_result(requests.get(url), plugin)
+                auth = HTTPBasicAuth(self.basic_auth_user, self.basic_auth_password)
+                self.handle_result(requests.get(url, proxies=self.proxies, auth=(auth if self.basic_auth_user != None else None), verify=False), plugin)
                 time.sleep(self.sleep_between_req_in_milis / 1000.0)
 
     def handle_result(self, request, plugin_name):

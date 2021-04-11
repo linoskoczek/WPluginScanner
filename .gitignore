@@ -132,4 +132,4 @@ dmypy.json
 settings.json
 
 # results
-*.txt
+20*.txt
