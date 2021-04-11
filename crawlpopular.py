@@ -7,6 +7,10 @@ from sys import stdout
 import requests
 import Config, Printer
 
+# disable certificate warnings
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 # PROGRAM
 plugins = []
 headers = {
@@ -30,11 +34,11 @@ def output_status(current, out_of):
 
 NAME = "POPULAR_CRAWL"
 
-Printer.p(NAME, "starting...", 1)
+Printer.p(NAME, "started...", 1)
 try:
     for page in range(1, Config.POPULAR_MAX_PAGE_NUMBER + 1):
         output_status(page, Config.POPULAR_MAX_PAGE_NUMBER);
-        response = requests.get(Config.WP_POPULAR_PLUGINS_URL + 'page/' + str(page), headers=headers)
+        response = requests.get(Config.WP_POPULAR_PLUGINS_URL + 'page/' + str(page), headers=headers, verify=False)
         for line in response.iter_lines():
             line = line.strip().decode("utf-8")
             if line.startswith(Config.POPULAR_PLUGIN_URL_START):

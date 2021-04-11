@@ -8,6 +8,10 @@ import requests
 import Config
 import Printer
 
+# disable certificate warnings
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 # PROGRAM
 plugins = []
 headers = {
@@ -26,10 +30,10 @@ def write_result_to_file():
 
 NAME = "ALL_CRAWL"
 
-Printer.p(NAME, "starting...", 1)
+Printer.p(NAME, "started...", 1)
 try:
     Printer.p(NAME, "downloading...")
-    response = requests.get(Config.WP_ALL_PLUGINS_SVN_URL, headers=headers)
+    response = requests.get(Config.WP_ALL_PLUGINS_SVN_URL, headers=headers, verify=False)
     Printer.p(NAME, "downloaded")
     for line in response.iter_lines():
         line = line.strip().decode("utf-8")

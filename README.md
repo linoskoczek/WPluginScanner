@@ -19,11 +19,12 @@ cd WPluginScanner
 
 ### Preparation
 
-Before first run it is required to generate list of plugins. Depending on your need, you might want to run only one of below commands.
+Before first run it is recommended to generate list of plugins. Depending on your need, you might want to run only one of below commands.
 ```
 python3 crawlpopular.py # to download list of most popular plugins
 python3 crawlall.py # to download list of all plugins
 ```
+This action is not necessary, because this repo contains these files already, but be aware they **can** be outdated. 
 
 ## Running scanner
 

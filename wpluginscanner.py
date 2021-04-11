@@ -6,15 +6,12 @@
 from queue import Queue
 import os
 import sys
-import getopt
-import requests
-import time
-import datetime
-import threading
+import re
 import argparse
 import Config
 import Printer
 import Storage
+import urllib3
 from Requester import Requester
 
 
@@ -26,6 +23,7 @@ number_of_requester_threads = Config.NUMBER_OF_REQUESTER_THREADS
 plugins_directory = Config.PLUGINS_DIRECTORY
 sleep_between_req_in_milis = Config.SLEEP_BETWEEN_REQ_IN_MILIS
 scan_method = ''
+proxies = {}
 NAME = "MAIN"
 threads = []
 
@@ -38,7 +36,7 @@ def popular_scan():
                   ' file not found! Scan will not be started!', 1)
         Printer.p(NAME, 'Have you run `python3 crawlpopular.py`?')
         return
-    Printer.p(NAME, "starting...", 1)
+    Printer.p(NAME, "started...", 1)
     Printer.p(NAME, 'creating blocking queue')
     load_file_to_queue(popular_out_file)
     run_requester_threads(number_of_requester_threads)
@@ -54,7 +52,7 @@ def all_scan():
                   ' file not found! Scan will not be started!', 1)
         Printer.p(NAME, 'Have you run `python3 crawlall.py`?', 1)
         return
-    Printer.p(NAME, "starting...", 1)
+    Printer.p(NAME, "started...", 1)
     Printer.p(NAME, 'creating blocking queue')
     load_file_to_queue(all_out_file)
     run_requester_threads(number_of_requester_threads)
@@ -66,7 +64,7 @@ def all_scan():
 def run_requester_threads(thread_number):
     for i in range(thread_number):
         thread = Requester(i, wordpress_url, plugins_directory,
-                           sleep_between_req_in_milis)
+                           sleep_between_req_in_milis, proxies, basic_auth_user, basic_auth_password)
         thread.start()
         threads.append(thread)
     Printer.p(NAME, 'Requester threads started')
@@ -83,7 +81,7 @@ def load_file_to_queue(file_name):
         Storage.plugins_queue.put(line.rstrip('\n'))
 
 
-def getOptions(args=sys.argv[1:]):
+def get_options(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description="Parses command.")
     threadsleep = parser.add_mutually_exclusive_group()
     parser.add_argument('wordpress_url', type=str,
@@ -104,6 +102,10 @@ def getOptions(args=sys.argv[1:]):
                         help='location of a file with plugins to check with ALL_CRAWL; default: ' + Config.ALL_OUT_FILE)
     parser.add_argument("-d", "--plugins-dir", dest='pluginsdir', type=str, default=Config.PLUGINS_DIRECTORY,
                         help='wp-plugins directory location, default: ' + Config.PLUGINS_DIRECTORY)
+    parser.add_argument("--proxy", dest='proxy', type=ip_or_url_with_port, default='',
+                        help='proxy to direct the requests through, IP:PORT format, default: \'\'')
+    parser.add_argument("--http-auth", dest='httpauth', type=str, default='',
+                        help='basic authentication, user:password format, default: \'\'')
     options = parser.parse_args(args)
     return options
 
@@ -118,9 +120,9 @@ def set_wordpress_url(url):
 
 
 def read_arguments(argv):
-    global wordpress_url, popular_out_file, number_of_requester_threads, plugins_directory, found_output_file, sleep_between_req_in_milis, all_out_file, scan_method
+    global wordpress_url, popular_out_file, number_of_requester_threads, plugins_directory, found_output_file, sleep_between_req_in_milis, all_out_file, scan_method, proxies, basic_auth_user, basic_auth_password
 
-    options = getOptions(argv)
+    options = get_options(argv)
     set_wordpress_url(options.wordpress_url)
     popular_out_file = options.popular_source
     all_out_file = options.all_source
@@ -132,8 +134,18 @@ def read_arguments(argv):
     found_output_file = options.output
     Printer.log_level = options.loglevel
     scan_method = options.method
+    proxies = {'http':options.proxy, 'https': options.proxy} if options.proxy != '' else {}
+    basic_auth_user, basic_auth_password = (options.httpauth.split(':')[0], options.httpauth.split(':')[1]) if options.httpauth != '' else (None, None)
+    
 
     print_settings()
+
+
+def ip_or_url_with_port(arg_value, pat=re.compile(r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)):\d+$")):
+    if not pat.match(arg_value) and arg_value != '':
+        raise Exception("Invalid proxy provided: proper format is IP:PORT, e.g. 127.0.0.1:8080")
+    return arg_value
+    
 
 
 def print_settings():
@@ -147,6 +159,7 @@ def print_settings():
 
 
 def main(argv):
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning) # disable warnings about untrusted certificate
     read_arguments(argv)
     Printer.p(NAME, "Scan method: " + scan_method)
     if scan_method.upper() == "ALL":
